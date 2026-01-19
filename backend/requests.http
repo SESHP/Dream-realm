@@ -1,0 +1,68 @@
+### Health Check
+GET http://localhost:3000/health
+
+### Register
+POST http://localhost:3000/auth/register
+Content-Type: application/json
+
+{
+  "username": "testuser",
+  "password": "test123"
+}
+
+### Login
+POST http://localhost:3000/auth/login
+Content-Type: application/json
+
+{
+  "username": "dreamer",
+  "password": "test123"
+}
+
+### Get Character
+GET http://localhost:3000/character
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJiMzEwYWQ4ZC0wMWE2LTQ2ZjMtYWQ4Ny1jYzQ1MDY1ZTQ5MzMiLCJpYXQiOjE3Njg2NDk0ODcsImV4cCI6MTc2OTI1NDI4N30.BmEZPiGDWtKaVo3Vqa-mITci-WcN7jE3H5A4EcoPeTE
+
+### Get Village
+GET http://localhost:3000/village
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJiMzEwYWQ4ZC0wMWE2LTQ2ZjMtYWQ4Ny1jYzQ1MDY1ZTQ5MzMiLCJpYXQiOjE3Njg2NDk0ODcsImV4cCI6MTc2OTI1NDI4N30.BmEZPiGDWtKaVo3Vqa-mITci-WcN7jE3H5A4EcoPeTE
+
+### Deposit Resources
+POST http://localhost:3000/village/deposit
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJiMzEwYWQ4ZC0wMWE2LTQ2ZjMtYWQ4Ny1jYzQ1MDY1ZTQ5MzMiLCJpYXQiOjE3Njg2NDk0ODcsImV4cCI6MTc2OTI1NDI4N30.BmEZPiGDWtKaVo3Vqa-mITci-WcN7jE3H5A4EcoPeTE
+
+### Get Map Resources
+GET http://localhost:3000/map/resources?zone=twilight_forest
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJiMzEwYWQ4ZC0wMWE2LTQ2ZjMtYWQ4Ny1jYzQ1MDY1ZTQ5MzMiLCJpYXQiOjE3Njg2NDk0ODcsImV4cCI6MTc2OTI1NDI4N30.BmEZPiGDWtKaVo3Vqa-mITci-WcN7jE3H5A4EcoPeTE
+
+### Start Gathering
+POST http://localhost:3000/character/gather/start
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJiMzEwYWQ4ZC0wMWE2LTQ2ZjMtYWQ4Ny1jYzQ1MDY1ZTQ5MzMiLCJpYXQiOjE3Njg2NDk0ODcsImV4cCI6MTc2OTI1NDI4N30.BmEZPiGDWtKaVo3Vqa-mITci-WcN7jE3H5A4EcoPeTE
+Content-Type: application/json
+
+{
+  "resourceId": "30037776-f6a9-40bd-821d-211abaacccb8"
+}
+
+### Finish Gathering
+POST http://localhost:3000/character/gather/finish
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJiMzEwYWQ4ZC0wMWE2LTQ2ZjMtYWQ4Ny1jYzQ1MDY1ZTQ5MzMiLCJpYXQiOjE3Njg2NDk0ODcsImV4cCI6MTc2OTI1NDI4N30.BmEZPiGDWtKaVo3Vqa-mITci-WcN7jE3H5A4EcoPeTE
+
+### Build Building
+POST http://localhost:3000/village/build
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJiMzEwYWQ4ZC0wMWE2LTQ2ZjMtYWQ4Ny1jYzQ1MDY1ZTQ5MzMiLCJpYXQiOjE3Njg2NDk0ODcsImV4cCI6MTc2OTI1NDI4N30.BmEZPiGDWtKaVo3Vqa-mITci-WcN7jE3H5A4EcoPeTE
+Content-Type: application/json
+
+{
+  "type": "nightmare_trap",
+  "positionX": 3,
+  "positionY": 5
+}
+
+### Seed Map
+POST http://localhost:3000/map/seed
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJiMzEwYWQ4ZC0wMWE2LTQ2ZjMtYWQ4Ny1jYzQ1MDY1ZTQ5MzMiLCJpYXQiOjE3Njg2NDk0ODcsImV4cCI6MTc2OTI1NDI4N30.BmEZPiGDWtKaVo3Vqa-mITci-WcN7jE3H5A4EcoPeTE
+
+### Collect Idle Resources
+POST http://localhost:3000/village/collect
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJiMzEwYWQ4ZC0wMWE2LTQ2ZjMtYWQ4Ny1jYzQ1MDY1ZTQ5MzMiLCJpYXQiOjE3Njg2NDk0ODcsImV4cCI6MTc2OTI1NDI4N30.BmEZPiGDWtKaVo3Vqa-mITci-WcN7jE3H5A4EcoPeTE

@@ -1,0 +1,96 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String    @id @default(uuid())
+  username     String    @unique
+  passwordHash String    @map("password_hash")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  
+  character    Character?
+  village      Village?
+
+  @@map("users")
+}
+
+model Character {
+  id              String    @id @default(uuid())
+  userId          String    @unique @map("user_id")
+  x               Int       @default(0)
+  y               Int       @default(0)
+  currentZone     String    @default("shelter") @map("current_zone")
+  currentAction   String?   @map("current_action")
+  actionStartedAt DateTime? @map("action_started_at")
+  actionTargetId  String?   @map("action_target_id")
+  
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  inventory       Inventory?
+
+  @@map("characters")
+}
+
+model Inventory {
+  id              String @id @default(uuid())
+  characterId     String @unique @map("character_id")
+  nightmareShards Int    @default(0) @map("nightmare_shards")
+  frozenWishes    Int    @default(0) @map("frozen_wishes")
+  oblivionEssence Int    @default(0) @map("oblivion_essence")
+  pureFear        Int    @default(0) @map("pure_fear")
+  moonDust        Int    @default(0) @map("moon_dust")
+  maxCapacity     Int    @default(50) @map("max_capacity")
+  
+  character       Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+
+  @@map("inventories")
+}
+
+model Village {
+  id              String   @id @default(uuid())
+  userId          String   @unique @map("user_id")
+  nightmareShards Int      @default(0) @map("nightmare_shards")
+  frozenWishes    Int      @default(0) @map("frozen_wishes")
+  oblivionEssence Int      @default(0) @map("oblivion_essence")
+  pureFear        Int      @default(0) @map("pure_fear")
+  moonDust        Int      @default(0) @map("moon_dust")
+  maxStorage      Int      @default(500) @map("max_storage")
+  lastCollectedAt DateTime @default(now()) @map("last_collected_at")
+  
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  buildings       Building[]
+
+  @@map("villages")
+}
+
+model Building {
+  id                    String    @id @default(uuid())
+  villageId             String    @map("village_id")
+  type                  String
+  level                 Int       @default(1)
+  positionX             Int       @map("position_x")
+  positionY             Int       @map("position_y")
+  constructionStartedAt DateTime? @map("construction_started_at")
+  constructionEndsAt    DateTime? @map("construction_ends_at")
+  isConstructing        Boolean   @default(false) @map("is_constructing")
+  
+  village               Village   @relation(fields: [villageId], references: [id], onDelete: Cascade)
+
+  @@map("buildings")
+}
+
+model MapResource {
+  id        String    @id @default(uuid())
+  type      String
+  zone      String
+  x         Int
+  y         Int
+  depleted  Boolean   @default(false)
+  respawnAt DateTime? @map("respawn_at")
+
+  @@map("map_resources")
+}
