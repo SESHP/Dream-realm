@@ -49,7 +49,7 @@ export class PreloadScene extends Phaser.Scene {
 
   create() {
     this.createPlayerAnimations();
-    this.scene.start('ShelterScene');
+    this.scene.start('VillageScene');
   }
 
   private createPlayerAnimations() {

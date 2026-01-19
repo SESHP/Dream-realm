@@ -4,6 +4,8 @@ import { PreloadScene } from './scenes/PreloadScene';
 import { ShelterScene } from './scenes/ShelterScene';
 import { WorldScene } from './scenes/WorldScene';
 import { UIScene } from './scenes/UIScene';
+import { VillageScene } from './scenes/VillageScene';
+
 
 export const gameConfig: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
@@ -18,7 +20,7 @@ export const gameConfig: Phaser.Types.Core.GameConfig = {
       debug: false
     }
   },
-  scene: [BootScene, PreloadScene, ShelterScene, WorldScene, UIScene],
+  scene: [BootScene, PreloadScene, VillageScene, ShelterScene, WorldScene, UIScene],
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
