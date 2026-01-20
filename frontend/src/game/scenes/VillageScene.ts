@@ -60,7 +60,14 @@ export class VillageScene extends Phaser.Scene {
     // Загружаем позиции объектов
     this.loadTreePositions();
     this.loadChestPositions();
-
+    
+    // Игрок в центре центрального чанка
+    const centerX = this.startChunkX * this.mapWidth + this.mapWidth / 2;
+    const centerY = this.startChunkY * this.mapHeight + this.mapHeight / 2;
+    
+    this.player = new Player(this, centerX, centerY);
+    this.player.setDepth(10);
+    
     // Создаём 9 чанков (3x3) вокруг позиции (200, 200)
     for (let gridY = this.startChunkY - 1; gridY <= this.startChunkY + 1; gridY++) {
       for (let gridX = this.startChunkX - 1; gridX <= this.startChunkX + 1; gridX++) {
@@ -69,12 +76,6 @@ export class VillageScene extends Phaser.Scene {
       }
     }
 
-    // Игрок в центре центрального чанка
-    const centerX = this.startChunkX * this.mapWidth + this.mapWidth / 2;
-    const centerY = this.startChunkY * this.mapHeight + this.mapHeight / 2;
-    
-    this.player = new Player(this, centerX, centerY);
-    this.player.setDepth(10);
 
     // Коллизия
     this.setupCollisions();
@@ -191,6 +192,7 @@ export class VillageScene extends Phaser.Scene {
       const chestY = pos.y + offsetY;
       
       const chest = new Chest(this, chestX, chestY);
+      chest.setupInteraction(this.player);
       chest.setDepth(chestY);
       
       // Физика для коллизии
@@ -200,6 +202,7 @@ export class VillageScene extends Phaser.Scene {
       body.setOffset(0, 0);    // центрируем по X, внизу по Y
       
       chunk.chests.push(chest);
+
     });
   }
 
@@ -301,6 +304,11 @@ export class VillageScene extends Phaser.Scene {
       // Depth для сортировки с объектами
       this.player.setDepth(this.player.y);
     }
+    this.chunks.forEach(chunk => {
+      chunk.chests.forEach(chest => {
+        chest.update();
+      });
+    });
   }
 
   private updateInfiniteWorld() {
