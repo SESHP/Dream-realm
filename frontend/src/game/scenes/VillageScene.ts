@@ -1,10 +1,14 @@
 import Phaser from 'phaser';
 import { Player } from '../entities/Player';
+import { AnimatedTree } from '../entities/AnimatedTree';
+import { Chest } from '../entities/Chest';
 
 interface Chunk {
   ground: Phaser.Tilemaps.TilemapLayer | null;
   paths: Phaser.Tilemaps.TilemapLayer | null;
   decor: Phaser.Tilemaps.TilemapLayer | null;
+  trees: AnimatedTree[];
+  chests: Chest[];
   map: Phaser.Tilemaps.Tilemap;
   gridX: number;
   gridY: number;
@@ -13,12 +17,19 @@ interface Chunk {
 export class VillageScene extends Phaser.Scene {
   private player!: Player;
   private mapData: any;
-  private mapWidth: number = 50 * 16;
-  private mapHeight: number = 50 * 16;
+  private mapWidth: number = 50 * 16;  // 800
+  private mapHeight: number = 50 * 16; // 800
   
   private chunks: Chunk[] = [];
-  private lastPlayerChunkX: number = 0;
-  private lastPlayerChunkY: number = 0;
+  private lastPlayerChunkX: number = 200;
+  private lastPlayerChunkY: number = 200;
+  
+  private treePositions: { x: number, y: number }[] = [];
+  private chestPositions: { x: number, y: number }[] = [];
+
+  // Начальная позиция чанков — далеко от нуля
+  private startChunkX: number = 200;
+  private startChunkY: number = 200;
 
   constructor() {
     super({ key: 'VillageScene' });
@@ -32,23 +43,35 @@ export class VillageScene extends Phaser.Scene {
     this.load.image('decor_16x16', '/assets/tilesets/decor_16x16.png');
     this.load.image('objects', '/assets/tilesets/objects.png');
     this.load.image('fences', '/assets/tilesets/fences.png');
+    
+    this.load.image('tree', '/assets/objects/tree.png');
+    
+    // Спрайтшит сундука — 4 кадра по 16x16
+    this.load.spritesheet('chest', '/assets/objects/chest.png', {
+      frameWidth: 16,
+      frameHeight: 16
+    });
   }
 
   create() {
     this.scene.stop('UIScene');
     this.mapData = this.cache.json.get('village-data');
+    
+    // Загружаем позиции объектов
+    this.loadTreePositions();
+    this.loadChestPositions();
 
-    // Создаём 9 чанков (3x3) вокруг начальной позиции
-    for (let gridY = -1; gridY <= 1; gridY++) {
-      for (let gridX = -1; gridX <= 1; gridX++) {
+    // Создаём 9 чанков (3x3) вокруг позиции (200, 200)
+    for (let gridY = this.startChunkY - 1; gridY <= this.startChunkY + 1; gridY++) {
+      for (let gridX = this.startChunkX - 1; gridX <= this.startChunkX + 1; gridX++) {
         const chunk = this.createChunk(gridX, gridY);
         this.chunks.push(chunk);
       }
     }
 
     // Игрок в центре центрального чанка
-    const centerX = this.mapWidth / 2;
-    const centerY = this.mapHeight / 2;
+    const centerX = this.startChunkX * this.mapWidth + this.mapWidth / 2;
+    const centerY = this.startChunkY * this.mapHeight + this.mapHeight / 2;
     
     this.player = new Player(this, centerX, centerY);
     this.player.setDepth(10);
@@ -62,8 +85,30 @@ export class VillageScene extends Phaser.Scene {
     
     this.player.setCollideWorldBounds(false);
     
-    this.lastPlayerChunkX = 0;
-    this.lastPlayerChunkY = 0;
+    this.lastPlayerChunkX = this.startChunkX;
+    this.lastPlayerChunkY = this.startChunkY;
+  }
+
+  private loadTreePositions() {
+    const treesLayer = this.mapData.layers.find((l: any) => l.name === 'trees');
+    if (!treesLayer || !treesLayer.objects) return;
+    
+    treesLayer.objects.forEach((obj: any) => {
+      if (obj.x !== undefined && obj.y !== undefined && !obj.gid) {
+        this.treePositions.push({ x: obj.x, y: obj.y });
+      }
+    });
+  }
+
+  private loadChestPositions() {
+    const chestsLayer = this.mapData.layers.find((l: any) => l.name === 'chests');
+    if (!chestsLayer || !chestsLayer.objects) return;
+    
+    chestsLayer.objects.forEach((obj: any) => {
+      if (obj.x !== undefined && obj.y !== undefined && !obj.gid) {
+        this.chestPositions.push({ x: obj.x, y: obj.y });
+      }
+    });
   }
 
   private createChunk(gridX: number, gridY: number): Chunk {
@@ -91,22 +136,92 @@ export class VillageScene extends Phaser.Scene {
       gridY,
       ground: this.createLayerFromData(map, 'ground', allTilesets, posX, posY, 0),
       paths: this.createLayerFromData(map, 'paths', allTilesets, posX, posY, 1),
-      decor: this.createLayerFromData(map, 'decor', allTilesets, posX, posY, 2)
+      decor: this.createLayerFromData(map, 'decor', allTilesets, posX, posY, 2),
+      trees: [],
+      chests: []
     };
+    
+    // Создаём объекты для этого чанка
+    this.createTreesForChunk(chunk);
+    this.createChestsForChunk(chunk);
 
     return chunk;
+  }
+
+  private createTreesForChunk(chunk: Chunk) {
+    const offsetX = chunk.gridX * this.mapWidth;
+    const offsetY = chunk.gridY * this.mapHeight;
+    
+    this.treePositions.forEach(pos => {
+      const treeX = pos.x + offsetX;
+      const treeY = pos.y + offsetY;
+      
+      const tree = new AnimatedTree(this, treeX, treeY, 'tree');
+      tree.setDepth(treeY);
+      tree.setCrop(1, 1, 46, 62);  // ← добавь сюда
+
+      
+      // Физика для коллизии
+      this.physics.add.existing(tree, true);
+      const body = tree.body as Phaser.Physics.Arcade.StaticBody;
+      body.setSize(24, 25);      // шире и выше
+      body.setOffset(12, 44);    // центрируем по X, внизу по Y
+      
+      chunk.trees.push(tree);
+    });
+  }
+
+  private createChestsForChunk(chunk: Chunk) {
+    if (this.chestPositions.length === 0) return;
+    
+    const offsetX = chunk.gridX * this.mapWidth;
+    const offsetY = chunk.gridY * this.mapHeight;
+    
+    // Рандомное количество сундуков 3-5
+    const chestCount = Phaser.Math.Between(3, 5);
+    
+    // Копируем и перемешиваем позиции
+    const shuffledPositions = Phaser.Utils.Array.Shuffle([...this.chestPositions]);
+    
+    // Берём только нужное количество
+    const selectedPositions = shuffledPositions.slice(0, chestCount);
+    
+    selectedPositions.forEach(pos => {
+      const chestX = pos.x + offsetX;
+      const chestY = pos.y + offsetY;
+      
+      const chest = new Chest(this, chestX, chestY);
+      chest.setDepth(chestY);
+      
+      // Физика для коллизии
+      this.physics.add.existing(chest, true);
+      const body = chest.body as Phaser.Physics.Arcade.StaticBody;
+      body.setSize(18, 25);      // шире и выше
+      body.setOffset(0, 0);    // центрируем по X, внизу по Y
+      
+      chunk.chests.push(chest);
+    });
   }
 
   private setupCollisions() {
     this.chunks.forEach(chunk => {
       if (chunk.decor) {
-        
         chunk.decor.setCollisionBetween(302, 320);
         chunk.decor.setCollisionBetween(94, 130);
         chunk.decor.setCollision([216, 217, 232, 233]);
         
         this.physics.add.collider(this.player, chunk.decor);
       }
+      
+      // Коллизия с деревьями
+      chunk.trees.forEach(tree => {
+        this.physics.add.collider(this.player, tree);
+      });
+      
+      // Коллизия с сундуками
+      chunk.chests.forEach(chest => {
+        this.physics.add.collider(this.player, chest);
+      });
     });
   }
 
@@ -141,6 +256,13 @@ export class VillageScene extends Phaser.Scene {
   }
 
   private moveChunk(chunk: Chunk, newGridX: number, newGridY: number) {
+    // Удаляем старые объекты
+    chunk.trees.forEach(tree => tree.destroy());
+    chunk.trees = [];
+    
+    chunk.chests.forEach(chest => chest.destroy());
+    chunk.chests = [];
+    
     chunk.gridX = newGridX;
     chunk.gridY = newGridY;
     
@@ -156,12 +278,28 @@ export class VillageScene extends Phaser.Scene {
     if (chunk.decor) {
       chunk.decor.setPosition(newPosX, newPosY);
     }
+    
+    // Создаём новые объекты
+    this.createTreesForChunk(chunk);
+    this.createChestsForChunk(chunk);
+    
+    // Коллизия для новых объектов
+    chunk.trees.forEach(tree => {
+      this.physics.add.collider(this.player, tree);
+    });
+    
+    chunk.chests.forEach(chest => {
+      this.physics.add.collider(this.player, chest);
+    });
   }
 
   update() {
     if (this.player) {
       this.player.update();
       this.updateInfiniteWorld();
+      
+      // Depth для сортировки с объектами
+      this.player.setDepth(this.player.y);
     }
   }
 
@@ -170,10 +308,15 @@ export class VillageScene extends Phaser.Scene {
     const playerChunkX = Math.floor(this.player.x / this.mapWidth);
     const playerChunkY = Math.floor(this.player.y / this.mapHeight);
 
+    // Аварийный телепорт если дошёл до отрицательных чанков
+    if (playerChunkX < 0 || playerChunkY < 0) {
+      this.player.x = this.startChunkX * this.mapWidth + this.mapWidth / 2;
+      this.player.y = this.startChunkY * this.mapHeight + this.mapHeight / 2;
+      return;
+    }
+
     // Если игрок перешёл в другой чанк — перемещаем чанки
     if (playerChunkX !== this.lastPlayerChunkX || playerChunkY !== this.lastPlayerChunkY) {
-      const deltaX = playerChunkX - this.lastPlayerChunkX;
-      const deltaY = playerChunkY - this.lastPlayerChunkY;
 
       // Перемещаем чанки которые остались позади
       this.chunks.forEach(chunk => {
