@@ -9,7 +9,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     D: Phaser.Input.Keyboard.Key;
   };
   
-  private speed: number = 120;
+  private speed: number = 90;
   private currentDirection: string = 'down';
   private isGathering: boolean = false;
 
