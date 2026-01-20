@@ -27,7 +27,7 @@ export class Chest extends Phaser.GameObjects.Sprite {
     });
     this.promptText.setOrigin(0.5, 1);
     this.promptText.setVisible(false);
-    this.promptText.setDepth(9999);
+    this.promptText.setDepth(1000);
     
     // Отключаем сглаживание для чёткого пиксельного текста
     this.promptText.setResolution(3);

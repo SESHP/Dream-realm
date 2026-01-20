@@ -38,6 +38,10 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   }
 
   update() {
+    if (this.getData('controlsEnabled') === false) {
+      this.body?.setVelocity(0, 0);
+      return;
+    }
     if (this.isGathering) {
       this.setVelocity(0, 0);
       return;

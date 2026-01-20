@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { Player } from '../entities/Player';
 import { AnimatedTree } from '../entities/AnimatedTree';
 import { Chest } from '../entities/Chest';
+import { House } from '../entities/House';
 
 interface Chunk {
   ground: Phaser.Tilemaps.TilemapLayer | null;
@@ -12,6 +13,7 @@ interface Chunk {
   map: Phaser.Tilemaps.Tilemap;
   gridX: number;
   gridY: number;
+  house: House | null;
 }
 
 export class VillageScene extends Phaser.Scene {
@@ -26,6 +28,9 @@ export class VillageScene extends Phaser.Scene {
   
   private treePositions: { x: number, y: number }[] = [];
   private chestPositions: { x: number, y: number }[] = [];
+
+  private housePosition: { x: number, y: number } | null = null;
+
 
   // Начальная позиция чанков — далеко от нуля
   private startChunkX: number = 200;
@@ -51,23 +56,43 @@ export class VillageScene extends Phaser.Scene {
       frameWidth: 16,
       frameHeight: 16
     });
+    // Спрайтшит дома — 5 кадров по 106x115
+    this.load.spritesheet('house', '/assets/objects/house.png', {
+      frameWidth: 106,
+      frameHeight: 115
+    });
   }
 
   create() {
     this.scene.stop('UIScene');
     this.mapData = this.cache.json.get('village-data');
+    const data = this.scene.settings.data as { exitingHouse?: boolean } | undefined;
+    const isExitingHouse = data?.exitingHouse || false;
     
     // Загружаем позиции объектов
     this.loadTreePositions();
     this.loadChestPositions();
-    
+    this.loadHousePosition();
+
     // Игрок в центре центрального чанка
-    const centerX = this.startChunkX * this.mapWidth + this.mapWidth / 2;
-    const centerY = this.startChunkY * this.mapHeight + this.mapHeight / 2;
+    const centerX = (this.startChunkX * this.mapWidth + this.mapWidth / 2 )+ 90;
+    const centerY = (this.startChunkY * this.mapHeight + this.mapHeight / 2) - 350;
     
     this.player = new Player(this, centerX, centerY);
     this.player.setDepth(10);
-    
+
+    if (isExitingHouse && this.housePosition) {
+      // Ставим игрока перед дверью дома
+      const houseX = this.startChunkX * this.mapWidth + this.housePosition.x;
+      const houseY = this.startChunkY * this.mapHeight + this.housePosition.y;
+      
+      this.player.setPosition(houseX - 5, houseY + 20);
+      this.player.anims.play('player-idle-down', true);
+      this.player.setData('controlsEnabled', true);
+      
+      this.cameras.main.fadeIn(300, 0, 0, 0);
+    }
+
     // Создаём 9 чанков (3x3) вокруг позиции (200, 200)
     for (let gridY = this.startChunkY - 1; gridY <= this.startChunkY + 1; gridY++) {
       for (let gridX = this.startChunkX - 1; gridX <= this.startChunkX + 1; gridX++) {
@@ -111,6 +136,14 @@ export class VillageScene extends Phaser.Scene {
       }
     });
   }
+  private loadHousePosition() {
+    const houseLayer = this.mapData.layers.find((l: any) => l.name === 'player_house');
+    
+    if (houseLayer && houseLayer.objects && houseLayer.objects.length > 0) {
+      const houseObj = houseLayer.objects[0];
+      this.housePosition = { x: houseObj.x, y: houseObj.y };
+    }
+  }
 
   private createChunk(gridX: number, gridY: number): Chunk {
     const map = this.make.tilemap({ 
@@ -139,12 +172,14 @@ export class VillageScene extends Phaser.Scene {
       paths: this.createLayerFromData(map, 'paths', allTilesets, posX, posY, 1),
       decor: this.createLayerFromData(map, 'decor', allTilesets, posX, posY, 2),
       trees: [],
-      chests: []
+      chests: [],
+      house: null,
     };
     
     // Создаём объекты для этого чанка
     this.createTreesForChunk(chunk);
     this.createChestsForChunk(chunk);
+    this.createHouseForChunk(chunk);
 
     return chunk;
   }
@@ -205,10 +240,30 @@ export class VillageScene extends Phaser.Scene {
 
     });
   }
+  private createHouseForChunk(chunk: Chunk) {
+    if (!this.housePosition) return;
+    
+    const offsetX = chunk.gridX * this.mapWidth;
+    const offsetY = chunk.gridY * this.mapHeight;
+    
+    const houseX = this.housePosition.x + offsetX;
+    const houseY = this.housePosition.y + offsetY;
+    
+    const house = new House(this, houseX, houseY);
+    house.setupInteraction(this.player);
+    house.setDepth(houseY);
+    
+    this.physics.add.existing(house, true);
+    const body = house.body as Phaser.Physics.Arcade.StaticBody;
+    body.setSize(95, 56);
+    body.setOffset(8, 70);
+    
+    chunk.house = house;
+  }
 
   private setupCollisions() {
     this.chunks.forEach(chunk => {
-      if (chunk.decor) {
+      if (chunk.decor && chunk.decor.layer) {
         chunk.decor.setCollisionBetween(302, 320);
         chunk.decor.setCollisionBetween(94, 130);
         chunk.decor.setCollision([216, 217, 232, 233]);
@@ -225,6 +280,10 @@ export class VillageScene extends Phaser.Scene {
       chunk.chests.forEach(chest => {
         this.physics.add.collider(this.player, chest);
       });
+
+      if (chunk.house) {
+        this.physics.add.collider(this.player, chunk.house);
+      }
     });
   }
 
@@ -265,6 +324,11 @@ export class VillageScene extends Phaser.Scene {
     
     chunk.chests.forEach(chest => chest.destroy());
     chunk.chests = [];
+
+    if (chunk.house) {
+      chunk.house.destroy();
+      chunk.house = null;
+    }
     
     chunk.gridX = newGridX;
     chunk.gridY = newGridY;
@@ -281,11 +345,13 @@ export class VillageScene extends Phaser.Scene {
     if (chunk.decor) {
       chunk.decor.setPosition(newPosX, newPosY);
     }
+
     
     // Создаём новые объекты
     this.createTreesForChunk(chunk);
     this.createChestsForChunk(chunk);
-    
+    this.createHouseForChunk(chunk);
+
     // Коллизия для новых объектов
     chunk.trees.forEach(tree => {
       this.physics.add.collider(this.player, tree);
@@ -294,6 +360,9 @@ export class VillageScene extends Phaser.Scene {
     chunk.chests.forEach(chest => {
       this.physics.add.collider(this.player, chest);
     });
+    if (chunk.house) {
+      this.physics.add.collider(this.player, chunk.house);
+    }
   }
 
   update() {
@@ -307,6 +376,9 @@ export class VillageScene extends Phaser.Scene {
     this.chunks.forEach(chunk => {
       chunk.chests.forEach(chest => {
         chest.update();
+        if (chunk.house) {
+          chunk.house.update();
+        }
       });
     });
   }
