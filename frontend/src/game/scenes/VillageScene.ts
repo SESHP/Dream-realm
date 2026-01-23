@@ -75,8 +75,8 @@ export class VillageScene extends Phaser.Scene {
     this.loadHousePosition();
 
     // Игрок в центре центрального чанка
-    const centerX = (this.startChunkX * this.mapWidth + this.mapWidth / 2 )+ 90;
-    const centerY = (this.startChunkY * this.mapHeight + this.mapHeight / 2) - 350;
+    const centerX = this.startChunkX * this.mapWidth + this.housePosition.x - 5;
+    const centerY = this.startChunkY * this.mapHeight + this.housePosition.y + 20;
     
     this.player = new Player(this, centerX, centerY);
     this.player.setDepth(10);

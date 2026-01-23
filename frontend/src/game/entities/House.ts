@@ -151,9 +151,11 @@ export class House extends Phaser.GameObjects.Sprite {
             this.walkTo(targetX, enterY, speed, () => {
                 
                 // 4. Fade out и переход
+                
                 this.scene.cameras.main.fadeOut(300, 0, 0, 0);
                 this.scene.cameras.main.once('camerafadeoutcomplete', () => {
-                this.scene.scene.start('HouseInteriorScene');
+                  this.scene.scene.start('HouseInteriorScene');
+                  // this.scene.scene.start('VillageScene');
                 });
             }, 'up');
             });
