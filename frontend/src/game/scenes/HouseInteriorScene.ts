@@ -278,7 +278,7 @@ export class HouseInteriorScene extends Phaser.Scene {
     title.setResolution(5);
 
     // Слоты сундука (9x3)
-    const chestSlots = this.createSlotGrid(centerX, centerY - 18, 10, 2);
+    const chestSlots = this.createSlotGrid(centerX, centerY - 17, 10, 2);
 
     // Заголовок инвентаря
     const invTitle = this.add.text(centerX, centerY + 10, 'Инвентарь', {
