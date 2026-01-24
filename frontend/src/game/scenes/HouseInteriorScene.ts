@@ -26,6 +26,9 @@ export class HouseInteriorScene extends Phaser.Scene {
       frameHeight: 16
     });
 
+    this.load.image('ui_panel', 'assets/ui/ui_panel.png');
+    this.load.image('ui_slot', 'assets/ui/ui_slot.png');
+
     /** PLAYER */
     this.load.spritesheet('player', 'assets/characters/player.png', {
       frameWidth: 48,
@@ -37,6 +40,9 @@ export class HouseInteriorScene extends Phaser.Scene {
       frameWidth: 16,
       frameHeight: 16
     });
+
+    this.textures.get('ui_panel').setFilter(Phaser.Textures.FilterMode.NEAREST);
+    this.textures.get('ui_slot').setFilter(Phaser.Textures.FilterMode.NEAREST);
   }
 
   init() {
@@ -176,6 +182,9 @@ export class HouseInteriorScene extends Phaser.Scene {
     cam.startFollow(this.player, true, 0.1, 0.1);
     cam.setBounds(0, 0, this.map.widthInPixels, this.map.heightInPixels);
     cam.setZoom(5);
+
+    this.textures.get('ui_panel').setFilter(Phaser.Textures.FilterMode.NEAREST);
+    this.textures.get('ui_slot').setFilter(Phaser.Textures.FilterMode.NEAREST);
   }
 
   update() {
@@ -243,44 +252,90 @@ export class HouseInteriorScene extends Phaser.Scene {
   }
 
   private openChestUI(chest: Phaser.Physics.Arcade.Sprite) {
+    this.currentChest = chest;
+    
     const cam = this.cameras.main;
     const centerX = cam.worldView.centerX;
     const centerY = cam.worldView.centerY;
-    this.currentChest = chest;
 
     // Затемнение
     const overlay = this.add.rectangle(centerX, centerY, cam.worldView.width, cam.worldView.height, 0x000000, 0.7);
     
-    // Панель сундука
-    const panel = this.add.rectangle(centerX, centerY - 6, 80, 40, 0x3a3a3a);
-    panel.setStrokeStyle(1, 0x6a6a6a);
+    // Главная панель
+    const panel = this.add.image(centerX, centerY, 'ui_panel');
+    panel.setScale(0.5);
     
-    const title = this.add.text(centerX, centerY - 21, 'Сундук', {
-      fontSize: '8px',
-      color: '#ffffff'
-    }).setOrigin(0.5);
+    // Заголовок сундука
+    const title = this.add.text(centerX, centerY - 48, 'Сундук', {
+      fontFamily: '"Press Start 2P", monospace',
+      fontSize: '6px',
+      color: '#ffffff',
+      stroke: '#000000',
+      strokeThickness: 1,
+      letterSpacing: 1.3
+    });
+    title.setOrigin(0.5);
+    title.setResolution(5);
 
-    // Панель инвентаря
-    const invPanel = this.add.rectangle(centerX, centerY + 6, 80, 40, 0x2a2a2a);
-    invPanel.setStrokeStyle(1, 0x5a5a5a);
-    
-    const invTitle = this.add.text(centerX, centerY + 3, 'Инвентарь', {
-      fontSize: '8px',
-      color: '#ffffff'
-    }).setOrigin(0.5);
+    // Слоты сундука (9x3)
+    const chestSlots = this.createSlotGrid(centerX, centerY - 18, 10, 2);
+
+    // Заголовок инвентаря
+    const invTitle = this.add.text(centerX, centerY + 10, 'Инвентарь', {
+      fontFamily: '"Press Start 2P", monospace',
+      fontSize: '6px',
+      color: '#ffffff',
+      stroke: '#000000',
+      strokeThickness: 1,
+      letterSpacing: 1.3
+    });
+    invTitle.setOrigin(0.5);
+    invTitle.setResolution(5);
+
+    // Слоты инвентаря (9x4)
+    const invSlots = this.createSlotGrid(centerX, centerY + 40, 8, 2);
 
     // Кнопка закрытия
-    const closeBtn = this.add.text(centerX, centerY + 11, '[E] Закрыть', {
-      fontSize: '6px',
-      color: '#aaaaaa'
-    }).setOrigin(0.5);
+    const closeBtn = this.add.text(centerX, centerY + 65, 'Закрыть[E]', {
+      fontFamily: '"Press Start 2P", monospace',
+      fontSize: '3px',
+      color: '#aaaaaa',
+      stroke: '#000000',
+      strokeThickness: 1,
+      letterSpacing: 1.3
+    });
+    closeBtn.setOrigin(0.5);
+    closeBtn.setResolution(5);
 
-    this.chestUI.add([overlay, panel, title, invPanel, invTitle, closeBtn]);
+    this.chestUI.add([overlay, panel, title, ...chestSlots, invTitle, ...invSlots, closeBtn]);
     this.chestUI.setVisible(true);
-    
     this.isChestOpen = true;
+  }
+
+  private createSlotGrid(centerX: number, centerY: number, cols: number, rows: number): Phaser.GameObjects.Image[] {
+    const slots: Phaser.GameObjects.Image[] = [];
+    const slotSize = 23;
+    const spacing = 0.5;
     
-    console.log('UI opened at:', centerX, centerY);
+    const gridWidth = cols * (slotSize + spacing) - spacing;
+    const gridHeight = rows * (slotSize + spacing) - spacing;
+    const startX = centerX - gridWidth / 2;
+    const startY = centerY - gridHeight / 2;
+    
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        const x = startX + col * (slotSize + spacing) + slotSize / 2;
+        const y = startY + row * (slotSize + spacing) + slotSize / 2;
+        
+        const slot = this.add.image(x, y, 'ui_slot');
+        slot.setScale(0.5);
+        slot.setOrigin(0.5);
+        
+        slots.push(slot);
+      }
+    }
+    
+    return slots;
   }
 
   private closeChestUI() {
