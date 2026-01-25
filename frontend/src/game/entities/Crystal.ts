@@ -9,24 +9,24 @@ export class CrystalReward extends Phaser.GameObjects.Container {
     x: number, 
     y: number, 
     amount: number,
-    crystalKey: string // ключ спрайта кристалла
+    crystalKey: string
   ) {
     super(scene, x, y);
     
     scene.add.existing(this);
     
-    // Иконка кристалла (конкретного типа)
+    // Иконка кристалла
     this.icon = scene.add.sprite(0, 0, crystalKey);
     this.icon.setOrigin(0.5);
-    this.icon.setScale(1); // подбери размер
+    this.icon.setScale(0.5); // ← УМЕНЬШИ до 0.3-0.5
     
     // Текст "+0.15"
-    this.text = scene.add.text(-14, 0, `+${amount.toFixed(2)}`, {
+    this.text = scene.add.text(-10, 0, `+${amount.toFixed(2)}`, { // ← -10 вместо -14
       fontFamily: '"Press Start 2P", monospace',
-      fontSize: '8px',
+      fontSize: '6px', // ← УМЕНЬШИ с 8px до 6px или 5px
       color: '#00ffff',
       stroke: '#000000',
-      strokeThickness: 2,
+      strokeThickness: 1, // ← УМЕНЬШИ с 2 до 1
     });
     this.text.setOrigin(1, 0.5);
     this.text.setResolution(3);
@@ -38,31 +38,28 @@ export class CrystalReward extends Phaser.GameObjects.Container {
   }
 
   private playAnimation() {
-    // Вылет вверх с затуханием
     this.scene.tweens.add({
       targets: this,
-      y: this.y - 50,
+      y: this.y - 30, // ← УМЕНЬШИ с 50 до 30
       alpha: { from: 1, to: 0 },
-      duration: 1500,
+      duration: 1200, // ← можно уменьшить до 1000
       ease: 'Cubic.easeOut',
       onComplete: () => {
         this.destroy();
       }
     });
     
-    // Легкое покачивание
     this.scene.tweens.add({
       targets: this,
-      x: this.x + Phaser.Math.Between(-10, 10),
-      duration: 750,
+      x: this.x + Phaser.Math.Between(-5, 5), // ← УМЕНЬШИ с 10 до 5
+      duration: 600,
       yoyo: true,
       ease: 'Sine.easeInOut'
     });
     
-    // Появление иконки с пульсацией
     this.scene.tweens.add({
       targets: this.icon,
-      scale: { from: 0.5, to: 1 },
+      scale: { from: 0.3, to: 0.5 }, // ← подкорректируй под размер иконки
       duration: 300,
       ease: 'Back.easeOut'
     });
