@@ -3,6 +3,9 @@ import { Player } from '../entities/Player';
 import { AnimatedTree } from '../entities/AnimatedTree';
 import { Chest } from '../entities/Chest';
 import { House } from '../entities/House';
+import { CrystalReward } from '../entities/Crystal'; // добавь
+import { getRandomCrystalAmount, getRandomCrystalType } from '../config/CrystalConfig'; // добавь
+
 
 interface Chunk {
   ground: Phaser.Tilemaps.TilemapLayer | null;
@@ -14,6 +17,11 @@ interface Chunk {
   gridX: number;
   gridY: number;
   house: House | null;
+}
+
+// Добавь интерфейс для кристаллов игрока
+interface PlayerCrystals {
+  [key: string]: number;
 }
 
 export class VillageScene extends Phaser.Scene {
@@ -31,6 +39,7 @@ export class VillageScene extends Phaser.Scene {
 
   private housePosition: { x: number, y: number } | null = null;
 
+  private playerCrystals: PlayerCrystals = {};
 
   // Начальная позиция чанков — далеко от нуля
   private startChunkX: number = 200;
@@ -61,6 +70,12 @@ export class VillageScene extends Phaser.Scene {
       frameWidth: 106,
       frameHeight: 115
     });
+
+    this.load.image('crystallized_desires', '/assets/objects/crystallized_desires.png');
+    this.load.image('essence_oblivion', '/assets/objects/essence_oblivion.png');
+    this.load.image('moon_dust', '/assets/objects/moon_dust.png');
+    this.load.image('nightmare_fragments', '/assets/objects/nightmare_fragments.png');
+    this.load.image('pure_fear', '/assets/objects/pure_fear.png');
   }
 
   create() {
@@ -229,6 +244,19 @@ export class VillageScene extends Phaser.Scene {
       const chest = new Chest(this, chestX, chestY);
       chest.setupInteraction(this.player);
       chest.setDepth(chestY);
+
+      chest.on('opened', (chest: Chest, reward: { type: string; name: string; amount: number }) => {
+        // Инициализируем если нет
+        if (!this.playerCrystals[reward.type]) {
+          this.playerCrystals[reward.type] = 0;
+        }
+        
+        // Добавляем кристаллы
+        this.playerCrystals[reward.type] += reward.amount;
+        
+        console.log(`Got ${reward.name}: +${reward.amount.toFixed(2)}`);
+        console.log('Total crystals:', this.playerCrystals);
+      });
       
       // Физика для коллизии
       this.physics.add.existing(chest, true);

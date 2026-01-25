@@ -1,4 +1,6 @@
 import Phaser from 'phaser';
+import { CrystalReward } from '../entities/Crystal'; // добавь
+import { getRandomCrystalAmount, getRandomCrystalType } from '../config/CrystalConfig'; // добавь
 
 export class Chest extends Phaser.GameObjects.Sprite {
   private isOpen: boolean = false;
@@ -94,11 +96,29 @@ export class Chest extends Phaser.GameObjects.Sprite {
   }
 
   private onOpened() {
-    // Эмитим событие что сундук открыт — можно слушать в сцене
-    this.emit('opened', this);
+    // Рандомный тип кристалла
+    const crystalType = getRandomCrystalType();
     
-    // Можно добавить эффект частиц, звук и т.д.
-    console.log('Chest opened!');
+    // Рандомное количество с весами
+    const crystalAmount = getRandomCrystalAmount();
+    
+    // Создаем визуальную награду
+    const reward = new CrystalReward(
+      this.scene, 
+      this.x, 
+      this.y - 20,
+      crystalAmount,
+      crystalType.key // передаем ключ конкретного кристалла
+    );
+    
+    // Эмитим событие с типом и количеством
+    this.emit('opened', this, {
+      type: crystalType.key,
+      name: crystalType.name,
+      amount: crystalAmount
+    });
+    
+    console.log(`Chest opened! ${crystalType.name}: +${crystalAmount.toFixed(2)}`);
   }
 
   isOpened(): boolean {
