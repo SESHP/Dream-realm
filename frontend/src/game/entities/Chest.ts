@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
-import { CrystalReward } from '../entities/Crystal'; // добавь
-import { getRandomCrystalAmount, getRandomCrystalType } from '../config/CrystalConfig'; // добавь
+import { CrystalReward } from '../entities/Crystal';
+import { getRandomCrystalAmount, getRandomCrystalType } from '../config/CrystalConfig';
 
 export class Chest extends Phaser.GameObjects.Sprite {
   private isOpen: boolean = false;
@@ -95,28 +95,55 @@ export class Chest extends Phaser.GameObjects.Sprite {
     });
   }
 
-  private onOpened() {
-    // Рандомный тип кристалла
+  private async onOpened() {
     const crystalType = getRandomCrystalType();
-    
-    // Рандомное количество с весами
     const crystalAmount = getRandomCrystalAmount();
     
-    // Создаем визуальную награду
-    const reward = new CrystalReward(
+    new CrystalReward(
       this.scene, 
       this.x, 
       this.y - 20,
       crystalAmount,
-      crystalType.key // передаем ключ конкретного кристалла
+      crystalType.key
     );
     
-    // Эмитим событие с типом и количеством
     this.emit('opened', this, {
       type: crystalType.key,
       name: crystalType.name,
       amount: crystalAmount
     });
+
+    try {
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        console.error('User not authenticated');
+        return;
+      }
+
+      const response = await fetch('http://localhost:3000/api/inventory/add-crystal', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          crystalType: crystalType.key,
+          amount: crystalAmount
+        })
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `HTTP ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log('✅ Crystal saved:', data);
+      
+    } catch (error) {
+      console.error('❌ Failed to save crystal:', error);
+    }
     
     console.log(`Chest opened! ${crystalType.name}: +${crystalAmount.toFixed(2)}`);
   }

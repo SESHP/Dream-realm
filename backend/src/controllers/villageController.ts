@@ -16,25 +16,25 @@ const buildingConfig: Record<string, {
   },
   nightmare_trap: {
     name: 'Ловушка кошмаров',
-    baseCost: { moonDust: 50, frozenWishes: 20 },
-    baseProduction: { nightmareShards: 5 },
+    baseCost: { moonDust: 50, crystallizedDesires: 20 },
+    baseProduction: { nightmareFragments: 5 },
     buildTime: 60
   },
   wish_crystallizer: {
     name: 'Кристаллизатор желаний',
-    baseCost: { moonDust: 40, nightmareShards: 15 },
-    baseProduction: { frozenWishes: 4 },
+    baseCost: { moonDust: 40, nightmareFragments: 15 },
+    baseProduction: { crystallizedDesires: 4 },
     buildTime: 60
   },
   oblivion_well: {
     name: 'Колодец забвения',
-    baseCost: { moonDust: 60, frozenWishes: 25 },
-    baseProduction: { oblivionEssence: 3 },
+    baseCost: { moonDust: 60, crystallizedDesires: 25 },
+    baseProduction: { essenceOblivion: 3 },
     buildTime: 90
   },
   mind_storage: {
     name: 'Хранилище разума',
-    baseCost: { moonDust: 100, nightmareShards: 30 },
+    baseCost: { moonDust: 100, nightmareFragments: 30 },
     buildTime: 120
   }
 };
@@ -75,9 +75,9 @@ export const collectIdleResources = async (req: AuthRequest, res: Response): Pro
 
     // Считаем продакшн от всех готовых зданий
     let totalProduction: Record<string, number> = {
-      nightmareShards: 0,
-      frozenWishes: 0,
-      oblivionEssence: 0,
+      nightmareFragments: 0,
+      crystallizedDesires: 0,
+      essenceOblivion: 0,
       pureFear: 0,
       moonDust: 0
     };
@@ -98,11 +98,11 @@ export const collectIdleResources = async (req: AuthRequest, res: Response): Pro
     const updatedVillage = await prisma.village.update({
       where: { id: village.id },
       data: {
-        nightmareShards: Math.min(village.nightmareShards + totalProduction.nightmareShards, village.maxStorage),
-        frozenWishes: Math.min(village.frozenWishes + totalProduction.frozenWishes, village.maxStorage),
-        oblivionEssence: Math.min(village.oblivionEssence + totalProduction.oblivionEssence, village.maxStorage),
-        pureFear: Math.min(village.pureFear + totalProduction.pureFear, village.maxStorage),
+        crystallizedDesires: Math.min(village.crystallizedDesires + totalProduction.crystallizedDesires, village.maxStorage),
+        essenceOblivion: Math.min(village.essenceOblivion + totalProduction.essenceOblivion, village.maxStorage),
         moonDust: Math.min(village.moonDust + totalProduction.moonDust, village.maxStorage),
+        nightmareFragments: Math.min(village.nightmareFragments + totalProduction.nightmareFragments, village.maxStorage),
+        pureFear: Math.min(village.pureFear + totalProduction.pureFear, village.maxStorage),
         lastCollectedAt: now
       }
     });
@@ -143,9 +143,9 @@ export const buildBuilding = async (req: AuthRequest, res: Response): Promise<vo
     const cost = config.baseCost;
     if (
       (cost.moonDust && village.moonDust < cost.moonDust) ||
-      (cost.nightmareShards && village.nightmareShards < cost.nightmareShards) ||
-      (cost.frozenWishes && village.frozenWishes < cost.frozenWishes) ||
-      (cost.oblivionEssence && village.oblivionEssence < cost.oblivionEssence)
+      (cost.nightmareFragments && village.nightmareFragments < cost.nightmareFragments) ||
+      (cost.crystallizedDesires && village.crystallizedDesires < cost.crystallizedDesires) ||
+      (cost.essenceOblivion && village.essenceOblivion < cost.essenceOblivion)
     ) {
       res.status(400).json({ error: 'Not enough resources' });
       return;
@@ -179,9 +179,9 @@ export const buildBuilding = async (req: AuthRequest, res: Response): Promise<vo
         where: { id: village.id },
         data: {
           moonDust: { decrement: cost.moonDust || 0 },
-          nightmareShards: { decrement: cost.nightmareShards || 0 },
-          frozenWishes: { decrement: cost.frozenWishes || 0 },
-          oblivionEssence: { decrement: cost.oblivionEssence || 0 }
+          nightmareFragments: { decrement: cost.nightmareFragments || 0 },
+          crystallizedDesires: { decrement: cost.crystallizedDesires || 0 },
+          essenceOblivion: { decrement: cost.essenceOblivion || 0 }
         }
       })
     ]);
@@ -256,21 +256,21 @@ export const depositResources = async (req: AuthRequest, res: Response): Promise
       prisma.village.update({
         where: { id: village.id },
         data: {
-          nightmareShards: Math.min(village.nightmareShards + inv.nightmareShards, village.maxStorage),
-          frozenWishes: Math.min(village.frozenWishes + inv.frozenWishes, village.maxStorage),
-          oblivionEssence: Math.min(village.oblivionEssence + inv.oblivionEssence, village.maxStorage),
+          crystallizedDesires: Math.min(village.crystallizedDesires + inv.crystallizedDesires, village.maxStorage),
+          essenceOblivion: Math.min(village.essenceOblivion + inv.essenceOblivion, village.maxStorage),
+          moonDust: Math.min(village.moonDust + inv.moonDust, village.maxStorage),
+          nightmareFragments: Math.min(village.nightmareFragments + inv.nightmareFragments, village.maxStorage),
           pureFear: Math.min(village.pureFear + inv.pureFear, village.maxStorage),
-          moonDust: Math.min(village.moonDust + inv.moonDust, village.maxStorage)
         }
       }),
       prisma.inventory.update({
         where: { id: inv.id },
         data: {
-          nightmareShards: 0,
-          frozenWishes: 0,
-          oblivionEssence: 0,
-          pureFear: 0,
-          moonDust: 0
+          crystallizedDesires: 0,
+          essenceOblivion: 0,
+          moonDust: 0,
+          nightmareFragments: 0,
+          pureFear: 0
         }
       })
     ]);

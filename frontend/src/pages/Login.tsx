@@ -12,7 +12,10 @@ export default function Login() {
 
   const navigate = useNavigate();
   const setToken = useGameStore((state) => state.setToken);
+  const setUserId = useGameStore((state) => state.setUserId); // добавь
 
+
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -22,6 +25,9 @@ export default function Login() {
       const action = isRegister ? register : login;
       const data = await action(username, password);
       setToken(data.token);
+      localStorage.setItem('userId', data.user.id);
+      localStorage.setItem('token', data.token);
+      setUserId(data.user.id);
       navigate('/game');
     } catch (err: any) {
       setError(err.response?.data?.error || 'Что-то пошло не так');

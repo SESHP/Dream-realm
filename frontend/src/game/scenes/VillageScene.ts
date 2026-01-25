@@ -7,6 +7,7 @@ import { CrystalReward } from '../entities/Crystal'; // добавь
 import { getRandomCrystalAmount, getRandomCrystalType } from '../config/CrystalConfig'; // добавь
 
 
+
 interface Chunk {
   ground: Phaser.Tilemaps.TilemapLayer | null;
   paths: Phaser.Tilemaps.TilemapLayer | null;

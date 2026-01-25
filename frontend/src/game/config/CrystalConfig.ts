@@ -38,3 +38,11 @@ export function getRandomCrystalAmount(): number {
 export function getRandomCrystalType() {
   return CRYSTAL_TYPES[Math.floor(Math.random() * CRYSTAL_TYPES.length)];
 }
+
+export const CRYSTAL_DB_MAP = {
+  'crystallized_desires': 'crystallizedDesires',
+  'essence_oblivion': 'essenceOblivion',
+  'moon_dust': 'moonDust',
+  'nightmare_fragments': 'nightmareFragments',
+  'pure_fear': 'pureFear'
+} as const

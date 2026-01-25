@@ -5,7 +5,7 @@ import authRoutes from './routes/auth';
 import characterRoutes from './routes/character';
 import villageRoutes from './routes/village';
 import mapRoutes from './routes/map';
-
+import inventoryRoutes from './routes/inventory';
 dotenv.config();
 
 const app = express();
@@ -19,6 +19,8 @@ app.use('/auth', authRoutes);
 app.use('/character', characterRoutes);
 app.use('/village', villageRoutes);
 app.use('/map', mapRoutes);
+app.use('/api/inventory', inventoryRoutes);
+
 
 // Health check
 app.get('/health', (req, res) => {
